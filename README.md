@@ -1,10 +1,10 @@
 
 
-(base) txa@zone1:~/keys/appdolivier$ eas build -p android --profile playstore --local
+(base) txa@zone1:$ eas build -p android --profile playstore --local
 
-(base) txa@zone1:~/keys/appdolivier$ eas credentials
+(base) txa@zone1:$ eas credentials
 
-(base) txa@zone1:~/keys/appdolivier$ java -jar pepk.jar --keystore=keystore.jks --alias=8ecb6fb947a5c1b4fefcbe7ba585727b --output=output.zip --include-cert --rsa-aes-encryption --encryption-key-path=./encryption_public_key.pem
+(base) txa@zone1:$ java -jar pepk.jar --keystore=keystore.jks --alias=8ecb6fb947a5c1b4fefcbe7ba585727b --output=output.zip --include-cert --rsa-aes-encryption --encryption-key-path=./encryption_public_key.pem
 
 see master branch for FCMv1 key
 
@@ -35,3 +35,5 @@ If you still want to go the imported route then go on Alibaba and look up a manu
 
 
 Having just a few machines/locations is not sustainable in most cases because of spoilage/expiration of unsold inventory. You need a lot of  different locations to move unsold inventory around. Inventory is not  cheap and is the biggest ongoing overhead cost, by far.
+
+Botswana | https://www.youtube.com/@Minifortnite_

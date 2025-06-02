@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity, Modal } from 'react-native';
-import { Tab, TabView, Card, Button, Icon } from '@rneui/themed';
+import { Tab, TabView, Card, Button, Icon, Avatar } from '@rneui/themed';
 import { Calendar } from 'react-native-calendars';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
-
+// import React from 'react';
+// import { View, Text, ScrollView, StyleSheet } from 'react-native';
+// import { Card, Avatar } from '@rneui/themed';
 const MachineScreen = ({ route }) => {
   const [index, setIndex] = useState(0);
   const [selectedItem, setSelectedItem] = useState('Cola');
@@ -139,59 +141,123 @@ const MachineScreen = ({ route }) => {
     </ScrollView>
   );
 
-  const RestockTab = () => (
-    <ScrollView style={[styles.tabContent, styles.restockTab]}>
-      <Card containerStyle={styles.restockCard}>
-        <Icon
-          name="calendar-refresh"
-          type="material-community"
-          color="#ffffff"
-          size={40}
-          containerStyle={styles.restockIcon}
-        />
-        <Text style={styles.restockTitle}>Upcoming Restocks</Text>
-        {upcomingRestocks.map((restock, index) => (
-          <Card key={index} containerStyle={styles.restockItemCard}>
-            <Text style={styles.restockDate}>{restock.date} - {restock.type}</Text>
-            <Text style={styles.restockMessage}>{restock.message}</Text>
-            <View style={styles.restockDetails}>
-              <Icon name="time" type="ionicon" color="#00ADF5" size={16} />
-              <Text style={styles.restockDetailText}>{restock.time}</Text>
-            </View>
-            <View style={styles.restockDetails}>
-              <Icon name="cash" type="ionicon" color="#00ADF5" size={16} />
-              <Text style={styles.restockDetailText}>R{restock.moneyRemoved} removed</Text>
-            </View>
-          </Card>
-        ))}
-      </Card>
 
-      <Card containerStyle={styles.restockCard}>
-        <Icon
-          name="history"
-          type="material"
-          color="#ffffff"
-          size={40}
-          containerStyle={styles.restockIcon}
-        />
-        <Text style={styles.restockTitle}>Past Restocks</Text>
-        {pastRestocks.map((restock, index) => (
-          <Card key={index} containerStyle={styles.restockItemCard}>
-            <Text style={styles.restockDate}>{restock.date} - {restock.type}</Text>
-            <Text style={styles.restockMessage}>{restock.message}</Text>
-            <View style={styles.restockDetails}>
-              <Icon name="time" type="ionicon" color="#00ADF5" size={16} />
-              <Text style={styles.restockDetailText}>{restock.time}</Text>
-            </View>
-            <View style={styles.restockDetails}>
-              <Icon name="cash" type="ionicon" color="#00ADF5" size={16} />
-              <Text style={styles.restockDetailText}>R{restock.moneyRemoved} removed</Text>
-            </View>
-          </Card>
-        ))}
-      </Card>
-    </ScrollView>
+  
+  const Message = ({ sender, content, time, isUser }) => (
+    <View style={[styles.messageContainer, isUser ? styles.userMessage : styles.botMessage]}>
+      <Avatar
+        rounded
+        icon={{ name: isUser ? 'user' : 'android', type: 'font-awesome' }}
+        containerStyle={[styles.avatar, isUser ? styles.userAvatar : styles.botAvatar]}
+      />
+      <View style={styles.messageContent}>
+        <Text style={styles.senderName}>{sender}</Text>
+        <Text style={styles.messageText}>{content}</Text>
+        <Text style={styles.messageTime}>{time}</Text>
+      </View>
+    </View>
   );
+  
+  const RestockTab = () => {
+    const formatDate = (dateString) => {
+      const options = { year: 'numeric', month: 'long', day: 'numeric' };
+      return new Date(dateString).toLocaleDateString(undefined, options);
+    };
+  
+    return (
+      <ScrollView style={styles.container}>
+        <Card containerStyle={styles.card}>
+          <Card.Title style={styles.cardTitle}>Restock Employee Chat</Card.Title>
+          <Card.Divider />
+          
+          {/* <Message
+            sender="RestockBot"
+            content="Hello! Let me update you on our upcoming and past restocks."
+            time="Now"
+            isUser={false}
+          /> */}
+  
+          {upcomingRestocks.map((restock, index) => (
+            <React.Fragment key={`upcoming-${index}`}>
+              <Message
+                sender="RestockBot"
+                content={`We have an upcoming ${restock.type} scheduled for 11 November at 13:00.`}
+                time="Now"
+                isUser={false}
+              />
+              <Message
+                sender="Employee"
+                content={`Great! What time is the ${restock.type} scheduled for?`}
+                time="Now"
+                isUser={true}
+              />
+              <Message
+                sender="RestockBot"
+                content={`The ${restock.type} is scheduled for ${restock.time}. ${restock.message}`}
+                time="Now"
+                isUser={false}
+              />
+              <Message
+                sender="Employee"
+                content="How much money will be removed for this restock?"
+                time="Now"
+                isUser={true}
+              />
+              <Message
+                sender="RestockBot"
+                content={`R${restock.moneyRemoved} will be removed for this restock.`}
+                time="Now"
+                isUser={false}
+              />
+            </React.Fragment>
+          ))}
+  
+          {/* <Message
+            sender="RestockBot"
+            content="Would you like to know about our past restocks as well?"
+            time="Now"
+            isUser={false}
+          />
+          <Message
+            sender="You"
+            content="Yes, please tell me about the recent past restocks."
+            time="Now"
+            isUser={true}
+          />
+  
+          {pastRestocks.map((restock, index) => (
+            <React.Fragment key={`past-${index}`}>
+              <Message
+                sender="RestockBot"
+                content={`We had a ${restock.type} on ${formatDate(restock.date)}.`}
+                time="Now"
+                isUser={false}
+              />
+              <Message
+                sender="You"
+                content={`How did the ${restock.type} go?`}
+                time="Now"
+                isUser={true}
+              />
+              <Message
+                sender="RestockBot"
+                content={`${restock.message} It was completed at ${restock.time}, and R${restock.moneyRemoved} was removed.`}
+                time="Now"
+                isUser={false}
+              />
+            </React.Fragment>
+          ))}
+  
+          <Message
+            sender="RestockBot"
+            content="That's all the restock information I have for now. Is there anything else you'd like to know?"
+            time="Now"
+            isUser={false}
+          /> */}
+        </Card>
+      </ScrollView>
+    );
+  };
 
   const RestockConfirmationModal = () => (
     <Modal
@@ -202,9 +268,9 @@ const MachineScreen = ({ route }) => {
     >
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Confirm Restock 🤖🦾</Text>
+          <Text style={styles.modalTitle}>{restockItem?.name} Restock</Text>
           <Text style={styles.modalText}>
-            Restock for {restockItem?.name} can be scheduled earliest after closing time at 10 PM.
+            Automatic Machine Restock or rotate it from a different machine?
           </Text>
           <View style={styles.modalButtonContainer}>
             <Button
@@ -213,10 +279,26 @@ const MachineScreen = ({ route }) => {
               buttonStyle={styles.modalCancelButton}
             />
             <Button
-              title="OK"
+              title="From Machine: 30 left (10PM)"
               onPress={() => {
                 setRestockModalVisible(false);
-                setIndex(2); // Switch to Restock tab
+                setIndex(1); // Switch to Restock tab
+              }}
+              buttonStyle={styles.modalOkButton}
+            />
+            <Button
+              title="From Inventory: 5 left (tomorrow 10PM)"
+              onPress={() => {
+                setRestockModalVisible(false);
+                setIndex(1); // Switch to Restock tab
+              }}
+              buttonStyle={styles.modalOkButton}
+            />
+                        <Button
+              title="From Other Machine: Select Machine"
+              onPress={() => {
+                setRestockModalVisible(false);
+                setIndex(1); // Switch to Restock tab
               }}
               buttonStyle={styles.modalOkButton}
             />
@@ -239,26 +321,29 @@ const MachineScreen = ({ route }) => {
           titleStyle={styles.tabTitle}
           icon={{ name: 'cube-outline', type: 'ionicon', color: 'white' }}
         />
-        <Tab.Item
-          title="Popular"
-          titleStyle={styles.tabTitle}
-          icon={{ name: 'trending-up', type: 'ionicon', color: 'white' }}
-        />
+
         <Tab.Item
           title="Restock"
           titleStyle={styles.tabTitle}
           icon={{ name: 'refresh', type: 'ionicon', color: 'white' }}
+        />
+
+        <Tab.Item
+          title="Popular"
+          titleStyle={styles.tabTitle}
+          icon={{ name: 'trending-up', type: 'ionicon', color: 'white' }}
         />
       </Tab>
       <TabView value={index} onChange={setIndex} animationType="spring">
         <TabView.Item style={{ width: '100%' }}>
           <InventoryTab />
         </TabView.Item>
-        <TabView.Item style={{ width: '100%' }}>
-          <PopularTab />
-        </TabView.Item>
+
         <TabView.Item style={{ width: '100%' }}>
           <RestockTab />
+        </TabView.Item>
+        <TabView.Item style={{ width: '100%' }}>
+          <PopularTab />
         </TabView.Item>
       </TabView>
       <RestockConfirmationModal />
@@ -267,10 +352,10 @@ const MachineScreen = ({ route }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1E1E1E',
-  },
+  // container: {
+  //   flex: 1,
+  //   backgroundColor: '#1E1E1E',
+  // },
   tabContent: {
     flex: 1,
     padding: 10,
@@ -302,12 +387,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  card: {
-    backgroundColor: '#2A2A2A',
-    borderRadius: 10,
-    marginBottom: 10,
-    padding: 15,
-  },
+  // card: {
+  //   backgroundColor: '#2A2A2A',
+  //   borderRadius: 10,
+  //   marginBottom: 10,
+  //   padding: 15,
+  // },
   stockRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -393,21 +478,21 @@ const styles = StyleSheet.create({
   selectedItemButtonText: {
     color: '#1E1E1E',
   },
-  cardTitle: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
+  // cardTitle: {
+  //   color: '#FFFFFF',
+  //   fontSize: 18,
+  //   fontWeight: 'bold',
+  //   marginBottom: 10,
+  // },
   restockTab: {
     backgroundColor: '#1E1E1E',
   },
-  restockCard: {
-    backgroundColor: '#2A2A2A',
-    borderRadius: 10,
-    padding: 20,
-    marginBottom: 15,
-  },
+  // restockCard: {
+  //   backgroundColor: '#2A2A2A',
+  //   borderRadius: 10,
+  //   padding: 20,
+  //   marginBottom: 15,
+  // },
   restockIcon: {
     backgroundColor: '#00ADF5',
     padding: 10,
@@ -415,13 +500,13 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 10,
   },
-  restockTitle: {
-    color: '#FFFFFF',
-    fontSize: 22,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
+  // restockTitle: {
+  //   color: '#FFFFFF',
+  //   fontSize: 22,
+  //   fontWeight: 'bold',
+  //   textAlign: 'center',
+  //   marginBottom: 20,
+  // },
   restockItemCard: {
     backgroundColor: '#3A3A3A',
     borderRadius: 10,
@@ -434,16 +519,16 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 5,
   },
-  restockMessage: {
-    color: '#CCCCCC',
-    fontSize: 16,
-    marginBottom: 10,
-  },
-  restockDetails: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 5,
-  },
+  // restockMessage: {
+  //   color: '#CCCCCC',
+  //   fontSize: 16,
+  //   marginBottom: 10,
+  // },
+  // restockDetails: {
+  //   flexDirection: 'row',
+  //   alignItems: 'center',
+  //   marginBottom: 5,
+  // },
   restockDetailText: {
     color: '#FFFFFF',
     fontSize: 14,
@@ -475,7 +560,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   modalButtonContainer: {
-    flexDirection: 'row',
+    // marginTop: 20,
+    flexDirection: 'column',
     justifyContent: 'space-around',
     width: '100%',
   },
@@ -486,10 +572,120 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   modalOkButton: {
+    marginTop: 10,
     backgroundColor: '#00ADF5',
     borderRadius: 5,
     paddingVertical: 10,
     paddingHorizontal: 20,
+  },
+  container: {
+    flex: 1,
+    backgroundColor: '#1E1E1E',
+    padding: 10,
+  },
+  // card: {
+  //   backgroundColor: '#2A2A2A',
+  //   borderRadius: 10,
+  //   padding: 15,
+  //   marginBottom: 15,
+  // },
+  icon: {
+    backgroundColor: '#1E1E1E',
+    padding: 10,
+    borderRadius: 50,
+    alignSelf: 'center',
+    marginBottom: 10,
+  },
+  title: {
+    color: '#FFFFFF',
+    fontSize: 22,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 15,
+  },
+  restockCard: {
+    backgroundColor: '#3A3A3A',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 10,
+  },
+  restockTitle: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  restockMessage: {
+    color: '#CCCCCC',
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  restockDetails: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  detailText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    marginLeft: 5,
+  },
+  // container: {
+  //   flex: 1,
+  //   backgroundColor: '#1E1E1E',
+  // },
+  card: {
+    backgroundColor: '#2A2A2A',
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 15,
+  },
+  cardTitle: {
+    color: '#FFFFFF',
+    fontSize: 22,
+    fontWeight: 'bold',
+  },
+  messageContainer: {
+    flexDirection: 'row',
+    marginBottom: 15,
+  },
+  userMessage: {
+    justifyContent: 'flex-end',
+  },
+  botMessage: {
+    justifyContent: 'flex-start',
+  },
+  avatar: {
+    width: 40,
+    height: 40,
+  },
+  userAvatar: {
+    backgroundColor: '#00ADF5',
+  },
+  botAvatar: {
+    backgroundColor: '#FF6B6B',
+  },
+  messageContent: {
+    maxWidth: '80%',
+    backgroundColor: '#3A3A3A',
+    borderRadius: 10,
+    padding: 10,
+    marginLeft: 10,
+    marginRight: 10,
+  },
+  senderName: {
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  messageText: {
+    color: '#FFFFFF',
+  },
+  messageTime: {
+    color: '#CCCCCC',
+    fontSize: 12,
+    alignSelf: 'flex-end',
+    marginTop: 5,
   },
 });
 
