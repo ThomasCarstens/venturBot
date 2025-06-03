@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "vendorpro",
-    "slug": "vendorpro",
+    "name": "venturbot",
+    "slug": "venturbot",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -15,15 +15,15 @@
     "ios": {
       "supportsTablet": true,
       "googleServicesFile": "./GoogleService-Info.plist",
-      "bundleIdentifier": "com.proposal.vendorpro",
-      "buildNumber": "15"
+      "bundleIdentifier": "com.txa.venturbot",
+      "buildNumber": "17"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.proposal.vendorpro",
+      "package": "com.txa.venturbot",
       "versionCode": 14,
       "googleServicesFile": "./google-services.json"
     },
@@ -54,7 +54,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "de607f50-9d33-4c7e-aab3-ff20b5fdaddd"
+        "projectId": "a8e91c71-5be3-4784-b36c-35dd11273242"
       }
     }
   }
