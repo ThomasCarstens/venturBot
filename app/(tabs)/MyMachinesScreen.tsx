@@ -1,5 +1,5 @@
 import { useNavigation } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -13,32 +13,17 @@ import {
   Modal,
   ActivityIndicator,
 } from 'react-native';
-// App.tsx
-// import { useEffect } from 'react';
-// import '@n8n/chat/style.css';
-import { createChat } from '@n8n/chat';
 
-// export const App = () => {
-	
-
-// 	return (<div></div>);
-// };
 const VentureLabDashboard = () => {
-
   const navigation = useNavigation();
+  const scrollViewRef = useRef(null);
   
-  // useEffect(() => {
-	// 	createChat({
-	// 		webhookUrl: 'https://rocketpen.app.n8n.coud/webhook/09c12f4a-3664-467f-bded-08b05b4be441/chat'//YOUR_PRODUCTION_WEBHOOK_URL
-	// 	});
-	// }, []);
-
   useEffect(() => {
     navigation.setOptions({
       headerShown: true,
-      title: `VentureBot Professional`,
+      title: `VentureBot`,
       headerStyle: {
-        backgroundColor: '#4F46E5',
+        backgroundColor: '#1a1a2e',
       },
       headerTintColor: '#fff',
       headerTitleStyle: {
@@ -46,133 +31,97 @@ const VentureLabDashboard = () => {
       }
     });
   }, [navigation]);
-  // <View style={styles.headerContent}>
-  //           <Text style={styles.headerTitle}>Venture Lab Professional</Text>
-  //           <Text style={styles.headerSubtitle}>Systematic Intelligence & Data Capture</Text>
-  //         </View>
-  const [chatMessages, setChatMessages] = useState([
+
+  // Separate chat states for each tab
+  const [queryChatMessages, setQueryChatMessages] = useState([
     { 
       id: 1, 
-      text: "Welcome to VentureBot Professional! 🚀\n\nI help you:\n📊 Capture meeting insights systematically\n🔍 Access startup intelligence instantly\n📋 Track action items across portfolio\n\nTry: 'Tell me about TechFlow Labs' or 'Log new meeting'", 
+      text: "Welcome to VentureBot Query! 🔍\n\nI help you instantly retrieve data:\n📊 Get startup metrics and intelligence\n🔍 Access meeting history and insights\n📋 Find action items across portfolio\n\nTry: 'Tell me about TechFlow Labs' or 'Show latest metrics'", 
       isBot: true 
     }
   ]);
+
+  const [notifyChatMessages, setNotifyChatMessages] = useState([
+    { 
+      id: 1, 
+      text: "Welcome to VentureBot Notify! 📝\n\nI help you capture and structure:\n📊 Meeting notes and key insights\n🔍 Convert conversations to data\n📋 Log action items and follow-ups\n\nTry: 'Log new meeting' or use voice notes to capture insights", 
+      isBot: true 
+    }
+  ]);
+
   const [inputMessage, setInputMessage] = useState('');
-  const [activeTab, setActiveTab] = useState('chat');
-  const [selectedStartup, setSelectedStartup] = useState(null);
+  const [activeTab, setActiveTab] = useState('query');
   const [isRecording, setIsRecording] = useState(false);
   const [processingModal, setProcessingModal] = useState(false);
 
-  // Professional startup database
-  const startupDatabase = {
-    'techflow-labs': {
-      name: 'TechFlow Labs',
-      stage: 'Series A',
-      sector: 'B2B SaaS',
-      valuation: '$12M',
-      raised: '$3.2M',
-      founded: '2023',
-      founders: ['Sarah Chen (CEO)', 'David Park (CTO)', 'Maria Santos (COO)'],
-      lastMeeting: {
-        date: 'May 20, 2025',
-        type: 'Due Diligence Review',
-        attendees: ['Sarah Chen', 'David Park', 'Investment Committee'],
-        duration: '90 min',
-        keyPoints: [
-          '• Revenue growth: 340% YoY, ARR now $1.8M',
-          '• Customer retention: 94% (industry avg: 85%)',
-          '• Team scaling from 12 to 35 employees by Q4',
-          '• Microsoft Azure partnership confirmed'
-        ],
-        actionItems: [
-          { item: 'Send term sheet draft', owner: 'Legal Team', due: 'May 23', status: 'pending' },
-          { item: 'Schedule customer reference calls', owner: 'Sarah Chen', due: 'May 25', status: 'pending' },
-          { item: 'Technical architecture review', owner: 'David Park', due: 'May 27', status: 'pending' }
-        ],
-        nextSteps: 'Final partner vote scheduled for May 30th'
-      },
-      metrics: {
-        mrr: '$150K',
-        growth: '+28% MoM',
-        customers: '47',
-        churn: '2.1%'
-      }
-    },
-    'quantum-ai': {
-      name: 'Quantum AI Solutions',
-      stage: 'Seed',
-      sector: 'AI/ML Infrastructure',
-      valuation: '$8M',
-      raised: '$1.5M',
-      founded: '2024',
-      founders: ['Dr. Alex Rivera (CEO)', 'Jennifer Wu (CTO)'],
-      lastMeeting: {
-        date: 'May 18, 2025',
-        type: 'Technical Deep Dive',
-        attendees: ['Dr. Alex Rivera', 'Jennifer Wu', 'Technical Advisory'],
-        duration: '120 min',
-        keyPoints: [
-          '• Breakthrough in quantum-classical ML hybrid',
-          '• Processing speed 15x faster than competitors',
-          '• Patent applications filed for core algorithms',
-          '• 3 Fortune 500 pilot programs confirmed'
-        ],
-        actionItems: [
-          { item: 'Patent filing completion', owner: 'Legal Team', due: 'May 30', status: 'pending' },
-          { item: 'Pilot program metrics report', owner: 'Dr. Rivera', due: 'June 1', status: 'pending' }
-        ],
-        nextSteps: 'Seed funding round launch targeted for June 2025'
-      },
-      metrics: {
-        mrr: '$25K',
-        growth: '+67% MoM',
-        customers: '8',
-        churn: '0%'
-      }
-    }
+  // Auto-scroll to bottom function
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 100);
   };
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
-  
+
     const userMessage = {
-      id: chatMessages.length + 1,
+      id: Date.now(),
       text: inputMessage,
       isBot: false,
       sessionId: 333
     };
-  
+
     const postedMessage = {
-      id: chatMessages.length + 1,
+      id: Date.now(),
       chatInput: inputMessage,
       isBot: false,
-      sessionId: 333
+      sessionId: 333,
+      requestType: activeTab // Add requestType based on active tab
     };
-  
-    setChatMessages(prev => [...prev, userMessage]);
+
+    // Update the appropriate chat state
+    if (activeTab === 'query') {
+      setQueryChatMessages(prev => [...prev, userMessage]);
+    } else {
+      setNotifyChatMessages(prev => [...prev, userMessage]);
+    }
+    
     setInputMessage('');
-  
+    scrollToBottom(); // Auto-scroll after user message
+
     // Get bot response
     try {
       const botResponseText = await getBotResponse(postedMessage);
       
       const botResponse = {
-        id: chatMessages.length + 2,
+        id: Date.now() + 1,
         text: botResponseText,
         isBot: true
       };
       
-      setChatMessages(prev => [...prev, botResponse]);
+      // Update the appropriate chat state
+      if (activeTab === 'query') {
+        setQueryChatMessages(prev => [...prev, botResponse]);
+      } else {
+        setNotifyChatMessages(prev => [...prev, botResponse]);
+      }
+      scrollToBottom(); // Auto-scroll after bot response
     } catch (error) {
       console.error('Error getting bot response:', error);
       
       const errorResponse = {
-        id: chatMessages.length + 2,
+        id: Date.now() + 1,
         text: 'Sorry, I encountered an error. Please try again.',
         isBot: true
       };
       
-      setChatMessages(prev => [...prev, errorResponse]);
+      // Update the appropriate chat state
+      if (activeTab === 'query') {
+        setQueryChatMessages(prev => [...prev, errorResponse]);
+      } else {
+        setNotifyChatMessages(prev => [...prev, errorResponse]);
+      }
+      scrollToBottom(); // Auto-scroll after error response
     }
   };
 
@@ -183,12 +132,11 @@ const VentureLabDashboard = () => {
         body: JSON.stringify(message),
         headers: {'Content-Type': 'application/json'}
       });
-  
+
       const data = await response.json();
       console.log('Response data:', data);
       console.log('Result:', data.result);
       
-      // Return the result, with a fallback if it's null/undefined
       return data.result || 'No response received';
       
     } catch (error) {
@@ -196,44 +144,6 @@ const VentureLabDashboard = () => {
       return 'Error occurred, please try again';
     }
   };
-    
-
-
-
-    // const lowerMessage = message.toLowerCase();
-    
-    // // Startup intelligence queries
-    // if (lowerMessage.includes('techflow') || lowerMessage.includes('tech flow')) {
-    //   setSelectedStartup('techflow-labs');
-    //   setTimeout(() => setActiveTab('startup'), 500);
-    //   return "📊 **TechFlow Labs Intelligence Retrieved**\n\n✅ Latest Meeting: Due Diligence Review (May 20)\n✅ Status: Series A stage, $12M valuation  \n✅ Key Metrics: $1.8M ARR, 340% YoY growth\n✅ Action Items: 3 pending, term sheet due May 23\n\n🎯 **Professional Impact:** Complete deal context enables informed investment decisions. Switching to full startup profile...\n\nThis systematic intelligence capture is essential for professional venture operations.";
-    // }
-    
-    // if (lowerMessage.includes('quantum') || lowerMessage.includes('ai solutions')) {
-    //   setSelectedStartup('quantum-ai');
-    //   setTimeout(() => setActiveTab('startup'), 500);
-    //   return "🔬 **Quantum AI Solutions Intelligence**\n\n✅ Latest: Technical Deep Dive (May 18)\n✅ Stage: Seed, $8M valuation\n✅ Breakthrough: 15x processing speed improvement\n✅ Status: Seed round prep for June launch\n\n🚀 **Venture Value:** Technical due diligence insights instantly accessible. Loading complete startup profile...\n\nStructured data prevents critical details from being lost across portfolio.";
-    // }
-
-    // // Professional data collection scenarios
-    // if (lowerMessage.includes('new meeting') || lowerMessage.includes('log meeting')) {
-    //   return "🎯 **Professional Meeting Capture System**\n\n**Systematic Data Collection:**\n📅 Meeting metadata (date, attendees, duration)\n💡 Key discussion points & strategic insights\n📋 Action items with owners & deadlines\n📈 Metrics updates & milestone tracking\n🔄 Next steps & follow-up requirements\n\n**Professional Impact:**\n• Transforms informal conversations into institutional knowledge\n• Prevents critical information loss\n• Enables data-driven investment decisions\n• Maintains complete deal context\n\nWhich startup is this meeting about? I'll structure the capture accordingly.";
-    // }
-
-    // if (lowerMessage.includes('voice') || lowerMessage.includes('record')) {
-    //   return "🎤 **Voice-Powered Professional Capture**\n\n**Advanced Processing:**\n• Real-time meeting transcription\n• Automatic key point extraction\n• Action item identification with deadlines\n• Strategic insight categorization\n• Participant tracking & role assignment\n\n**Venture Lab Benefits:**\n✅ Capture insights during/after meetings\n✅ Transform conversations into searchable data\n✅ Maintain institutional memory\n✅ Accelerate deal flow processes\n\nReady to start professional voice capture? Tap the microphone to begin systematic data collection.";
-    // }
-
-    // if (lowerMessage.includes('action items') || lowerMessage.includes('follow up')) {
-    //   return "📋 **Portfolio Action Items Dashboard**\n\n**TechFlow Labs (Series A):**\n• Term sheet draft → Legal Team (Due: May 23) 🔴\n• Customer reference calls → Sarah Chen (Due: May 25) 🟡\n• Architecture review → David Park (Due: May 27) 🟡\n\n**Quantum AI (Seed):**\n• Patent filing → Legal Team (Due: May 30) 🟡\n• Pilot metrics → Dr. Rivera (Due: June 1) 🟡\n\n🎯 **Professional Value:** Systematic tracking prevents critical items from falling through cracks - essential for institutional venture management.\n\nNeed to update any action items or add new ones?";
-    // }
-
-    // if (lowerMessage.includes('metrics') || lowerMessage.includes('performance')) {
-    //   return "📈 **Professional Portfolio Dashboard**\n\n**Growth Metrics:**\n🚀 TechFlow Labs: $150K MRR (+28% MoM)\n⚡ Quantum AI: $25K MRR (+67% MoM)\n\n**Key Performance Indicators:**\n✅ Average customer retention: 94%\n✅ Portfolio revenue growth: +35% average\n✅ Zero churn in AI/ML investments\n✅ 12 active due diligence processes\n\n**Investment Committee Impact:**\nReal-time metrics enable proactive portfolio management and data-driven investment decisions. This professional tracking transforms venture operations from relationship-based to intelligence-driven.";
-    // }
-
-    // return "💼 **VentureBot Professional Capabilities**\n\n🔍 **Startup Intelligence Hub:**\n\"Tell me about [company name]\" → Complete profiles with meeting history, metrics, action items\n\n📊 **Professional Data Capture:**\n\"Log new meeting\" or use voice notes → Systematic conversion of conversations into structured intelligence\n\n📋 **Portfolio Management:**\n\"Show action items\" → Track deliverables across entire portfolio\n\n🎯 **Professional Impact:**\nTransforms ad-hoc venture processes into systematic, data-driven operations essential for institutional investment management.";
-  // };
 
   const handleVoiceNote = () => {
     if (isRecording) {
@@ -243,19 +153,31 @@ const VentureLabDashboard = () => {
       setTimeout(() => {
         setProcessingModal(false);
         const voiceMessage = {
-          id: chatMessages.length + 1,
-          text: "🎤 **Professional Voice Capture Processed**\n\nJust finished Series A committee meeting for TechFlow Labs. Key insights captured:\n\n📊 Revenue metrics exceeded projections - $1.8M ARR\n🤝 Microsoft partnership deal confirmed  \n✅ Unanimous committee vote to proceed\n📋 Action items: Legal drafts terms by May 23, customer reference calls by May 25\n💰 Investment thesis validated with strong unit economics",
+          id: Date.now(),
+          text: "🎤 **Voice Note Captured**\n\nJust finished Series A committee meeting for TechFlow Labs. Key insights:\n\n📊 Revenue exceeded projections - $1.8M ARR\n🤝 Microsoft partnership confirmed\n✅ Committee voted to proceed\n📋 Next steps: Legal terms by May 23",
           isBot: false
         };
-        setChatMessages(prev => [...prev, voiceMessage]);
+        
+        if (activeTab === 'query') {
+          setQueryChatMessages(prev => [...prev, voiceMessage]);
+        } else {
+          setNotifyChatMessages(prev => [...prev, voiceMessage]);
+        }
+        scrollToBottom(); // Auto-scroll after voice message
         
         setTimeout(() => {
           const botResponse = {
-            id: chatMessages.length + 2,
-            text: "✅ **Professional Data Processing Complete**\n\n**Automatically Structured:**\n📅 Meeting Type: Series A Investment Committee\n💡 Key Insights: Revenue growth, strategic partnerships\n📊 Metrics Update: $1.8M ARR milestone achieved\n🎯 Decision: Unanimous proceed vote recorded\n📋 Action Items: Legal (May 23), Customer calls (May 25)\n\n**Added to TechFlow Labs Intelligence Profile**\n\n🚀 **Professional Impact:** This systematic capture ensures your venture lab maintains complete institutional knowledge. Critical deal context is now preserved and searchable for future investment decisions.\n\nYour professional venture operations just got more intelligent.",
+            id: Date.now() + 1,
+            text: "✅ **Voice Note Processed**\n\n**Structured Data Captured:**\n📅 Meeting: Series A Investment Committee\n💡 Key Insights: Revenue growth, partnerships\n📊 Metrics: $1.8M ARR milestone\n🎯 Decision: Proceed vote recorded\n\n**Added to Company Intelligence**\n\nYour conversation has been converted into structured venture data.",
             isBot: true
           };
-          setChatMessages(prev => [...prev, botResponse]);
+          
+          if (activeTab === 'query') {
+            setQueryChatMessages(prev => [...prev, botResponse]);
+          } else {
+            setNotifyChatMessages(prev => [...prev, botResponse]);
+          }
+          scrollToBottom(); // Auto-scroll after bot response
         }, 1500);
       }, 3000);
     } else {
@@ -263,107 +185,22 @@ const VentureLabDashboard = () => {
     }
   };
 
-  const renderStartupProfile = () => {
-    if (!selectedStartup || !startupDatabase[selectedStartup]) return null;
-    
-    const startup = startupDatabase[selectedStartup];
+  const getCurrentChatMessages = () => {
+    return activeTab === 'query' ? queryChatMessages : notifyChatMessages;
+  };
 
-    return (
-      <ScrollView style={styles.startupProfile} showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.startupHeader}>
-          <View style={styles.startupHeaderContent}>
-            <Text style={styles.startupName}>{startup.name}</Text>
-            <View style={styles.startupBadges}>
-              <View style={styles.stageBadge}>
-                <Text style={styles.stageBadgeText}>{startup.stage}</Text>
-              </View>
-              <View style={styles.sectorBadge}>
-                <Text style={styles.sectorBadgeText}>{startup.sector}</Text>
-              </View>
-            </View>
-            <Text style={styles.startupValuation}>Valuation: {startup.valuation} • Raised: {startup.raised}</Text>
-          </View>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => setActiveTab('chat')}
-          >
-            <Text style={styles.backButtonText}>← Chat</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Key Metrics */}
-        <View style={styles.metricsSection}>
-          <Text style={styles.sectionTitle}>📊 Current Metrics</Text>
-          <View style={styles.metricsGrid}>
-            <View style={styles.metricCard}>
-              <Text style={styles.metricLabel}>MRR</Text>
-              <Text style={styles.metricValue}>{startup.metrics.mrr}</Text>
-            </View>
-            <View style={styles.metricCard}>
-              <Text style={styles.metricLabel}>Growth</Text>
-              <Text style={[styles.metricValue, styles.growthValue]}>{startup.metrics.growth}</Text>
-            </View>
-            <View style={styles.metricCard}>
-              <Text style={styles.metricLabel}>Customers</Text>
-              <Text style={styles.metricValue}>{startup.metrics.customers}</Text>
-            </View>
-            <View style={styles.metricCard}>
-              <Text style={styles.metricLabel}>Churn</Text>
-              <Text style={styles.metricValue}>{startup.metrics.churn}</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Latest Meeting */}
-        <View style={styles.meetingSection}>
-          <Text style={styles.sectionTitle}>📅 Latest Meeting: {startup.lastMeeting.type}</Text>
-          <View style={styles.meetingCard}>
-            <View style={styles.meetingHeader}>
-              <Text style={styles.meetingDate}>{startup.lastMeeting.date}</Text>
-              <Text style={styles.meetingDuration}>{startup.lastMeeting.duration}</Text>
-            </View>
-            <Text style={styles.meetingAttendees}>
-              👥 {startup.lastMeeting.attendees.join(', ')}
-            </Text>
-            
-            <Text style={styles.subsectionTitle}>💡 Key Discussion Points:</Text>
-            {startup.lastMeeting.keyPoints.map((point, idx) => (
-              <Text key={idx} style={styles.keyPoint}>{point}</Text>
-            ))}
-            
-            <Text style={styles.subsectionTitle}>📋 Action Items:</Text>
-            {startup.lastMeeting.actionItems.map((action, idx) => (
-              <View key={idx} style={styles.actionItem}>
-                <View style={styles.actionItemHeader}>
-                  <Text style={styles.actionItemText}>{action.item}</Text>
-                  <View style={[styles.statusDot, action.status === 'completed' ? styles.completedDot : styles.pendingDot]} />
-                </View>
-                <Text style={styles.actionItemDetails}>
-                  👤 {action.owner} • 📅 Due: {action.due}
-                </Text>
-              </View>
-            ))}
-            
-            <View style={styles.nextStepsSection}>
-              <Text style={styles.subsectionTitle}>🎯 Next Steps:</Text>
-              <Text style={styles.nextStepsText}>{startup.lastMeeting.nextSteps}</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Founders */}
-        <View style={styles.foundersSection}>
-          <Text style={styles.sectionTitle}>👥 Leadership Team</Text>
-          <View style={styles.foundersCard}>
-            {startup.founders.map((founder, idx) => (
-              <Text key={idx} style={styles.founderName}>{founder}</Text>
-            ))}
-            <Text style={styles.foundedYear}>Founded: {startup.founded}</Text>
-          </View>
-        </View>
-      </ScrollView>
-    );
+  const getChatHeaderContent = () => {
+    if (activeTab === 'query') {
+      return {
+        title: "Instant Data Retrieval",
+        subtitle: "Transform conversations into structured venture intelligence"
+      };
+    } else {
+      return {
+        title: "Intelligence Structuring",
+        subtitle: "Convert conversations into actionable data"
+      };
+    }
   };
 
   return (
@@ -372,117 +209,106 @@ const VentureLabDashboard = () => {
         style={styles.container} 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        {/* Header */}
-        <View style={styles.header}>
+        {/* Modern Header */}
+        <View style={styles.modernHeader}>
+          <View style={styles.headerContent}>
+            <View style={styles.logoContainer}>
+              {/* <View style={styles.logoIcon} /> */}
+              <Text style={styles.headerTitle}>🤖 VentureBot</Text>
+            </View>
+            <View style={styles.statusIndicator}>
+              <View style={styles.onlineIndicator} />
+              <Text style={styles.statusText}>Online</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Chat Section */}
+        <View style={styles.chatSection}>
+          <View style={styles.chatHeader}>
+            <Text style={styles.chatTitle}>{getChatHeaderContent().title}</Text>
+            <Text style={styles.chatSubtitle}>{getChatHeaderContent().subtitle}</Text>
+          </View>
           
-          <View style={styles.tabContainer}>
-            <TouchableOpacity 
-              style={[styles.tab, activeTab === 'chat' && styles.activeTab]}
-              onPress={() => setActiveTab('chat')}
+          <ScrollView 
+            ref={scrollViewRef}
+            style={styles.chatMessages} 
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.chatMessagesContent}
+          >
+            {getCurrentChatMessages().map((message) => (
+              <View key={message.id} style={[
+                styles.messageContainer,
+                message.isBot ? styles.botMessageContainer : styles.userMessageContainer
+              ]}>
+                <View style={[
+                  styles.messageBubble,
+                  message.isBot ? styles.botMessage : styles.userMessage
+                ]}>
+                  <Text style={[
+                    styles.messageText,
+                    message.isBot ? styles.botMessageText : styles.userMessageText
+                  ]}>
+                    {message.text}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </ScrollView>
+          
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.textInput}
+              value={inputMessage}
+              onChangeText={setInputMessage}
+              placeholder={activeTab === 'query' ? "Ask about startups, metrics, insights..." : "Log meetings, capture insights, voice notes..."}
+              placeholderTextColor="#94a3b8"
+              multiline={false}
+              onSubmitEditing={handleSendMessage}
+            />
+            {/* <TouchableOpacity 
+              style={[styles.voiceButton, isRecording && styles.voiceButtonRecording]} 
+              onPress={handleVoiceNote}
             >
-              <Text style={[styles.tabText, activeTab === 'chat' && styles.activeTabText]}>
-                💬 Data Capture
+              <Text style={styles.voiceButtonText}>
+                {isRecording ? '⏹️' : '🎤'}
               </Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.tab, activeTab === 'startup' && styles.activeTab]}
-              onPress={() => setActiveTab('startup')}
-            >
-              <Text style={[styles.tabText, activeTab === 'startup' && styles.activeTabText]}>
-                🔍 Intelligence
-              </Text>
+            </TouchableOpacity> */}
+            <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage}>
+              <Text style={styles.sendButtonText}>Send</Text>
             </TouchableOpacity>
           </View>
         </View>
 
-        {activeTab === 'chat' ? (
-          <View style={styles.chatSection}>
-            <View style={styles.chatHeader}>
-              <Text style={styles.chatTitle}>🤖 Structured Intel from Conversations</Text>
-              <Text style={styles.chatSubtitle}>Transform conversations into company data</Text>
-              {/* <Text style={styles.chatTitle}>🤖 Instant Data Retrieval System</Text>
-              <Text style={styles.chatSubtitle}>Transform conversations into structured venture intelligence</Text> */}
-
+        {/* Modern Bottom Tabs */}
+        <View style={styles.bottomTabs}>
+          <TouchableOpacity 
+            style={[styles.bottomTab, activeTab === 'query' && styles.activeBottomTab]}
+            onPress={() => setActiveTab('query')}
+          >
+            <View style={styles.tabContent}>
+              <Text style={styles.tabIcon}>🔍</Text>
+              <Text style={[styles.bottomTabText, activeTab === 'query' && styles.activeBottomTabText]}>
+                Query Knowledge Base
+              </Text>
             </View>
-            
-            <ScrollView style={styles.chatMessages} showsVerticalScrollIndicator={false}>
-              {chatMessages.map((message) => (
-                <View key={message.id} style={[
-                  styles.messageContainer,
-                  message.isBot ? styles.botMessageContainer : styles.userMessageContainer
-                ]}>
-                  <View style={[
-                    styles.messageBubble,
-                    message.isBot ? styles.botMessage : styles.userMessage
-                  ]}>
-                    <Text style={[
-                      styles.messageText,
-                      message.isBot ? styles.botMessageText : styles.userMessageText
-                    ]}>
-                      {message.text}
-                    </Text>
-                  </View>
-                </View>
-              ))}
-            </ScrollView>
-            
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.textInput}
-                value={inputMessage}
-                onChangeText={setInputMessage}
-                placeholder="Ask about startups, log meetings, capture insights..."
-                placeholderTextColor="#999"
-                multiline={false}
-                onSubmitEditing={handleSendMessage}
-              />
-              <TouchableOpacity 
-                style={[styles.voiceButton, isRecording && styles.voiceButtonRecording]} 
-                onPress={handleVoiceNote}
-              >
-                <Text style={styles.voiceButtonText}>
-                  {isRecording ? '⏹️' : '🎤'}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage}>
-                <Text style={styles.sendButtonText}>Send</Text>
-              </TouchableOpacity>
+            {activeTab === 'query' && <View style={styles.activeTabIndicator} />}
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.bottomTab, activeTab === 'notify' && styles.activeBottomTab]}
+            onPress={() => setActiveTab('notify')}
+          >
+            <View style={styles.tabContent}>
+              <Text style={styles.tabIcon}>📝</Text>
+              <Text style={[styles.bottomTabText, activeTab === 'notify' && styles.activeBottomTabText]}>
+                Update Intel, Notify
+              </Text>
             </View>
+            {activeTab === 'notify' && <View style={styles.activeTabIndicator} />}
+          </TouchableOpacity>
+        </View>
 
-            
-          </View>
-        ) : (
-          <View style={styles.startupSection}>
-            {selectedStartup ? (
-              renderStartupProfile()
-            ) : (
-              <View style={styles.startupSelector}>
-                <Text style={styles.selectorTitle}>🔍 Startup Intelligence Hub</Text>
-                <Text style={styles.selectorSubtitle}>
-                  Access comprehensive profiles with meeting history, metrics, and action items
-                </Text>
-                <View style={styles.startupButtons}>
-                  <TouchableOpacity
-                    style={styles.startupButton}
-                    onPress={() => setSelectedStartup('techflow-labs')}
-                  >
-                    <Text style={styles.startupButtonTitle}>TechFlow Labs</Text>
-                    <Text style={styles.startupButtonSubtitle}>Series A • B2B SaaS • $12M</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.startupButton}
-                    onPress={() => setSelectedStartup('quantum-ai')}
-                  >
-                    <Text style={styles.startupButtonTitle}>Quantum AI Solutions</Text>
-                    <Text style={styles.startupButtonSubtitle}>Seed • AI/ML • $8M</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
-          </View>
-        )}
-
-        {/* Processing Modal */}
+        {/* Modern Processing Modal */}
         <Modal
           visible={processingModal}
           transparent={true}
@@ -490,24 +316,12 @@ const VentureLabDashboard = () => {
         >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
-              <ActivityIndicator size="large" color="#4F46E5" />
-              <Text style={styles.processingText}>Processing Professional Voice Capture</Text>
-              <Text style={styles.processingSubtext}>Converting to structured venture intelligence...</Text>
+              <ActivityIndicator size="large" color="#3b82f6" />
+              <Text style={styles.processingText}>Processing Voice Note</Text>
+              <Text style={styles.processingSubtext}>Converting to structured data...</Text>
             </View>
           </View>
         </Modal>
-
-        {/* Professional Features Footer */}
-        <View style={styles.featuresFooter}>
-          <View style={styles.featureItem}>
-            <Text style={styles.featureTitle}>📊 Data Capture</Text>
-            <Text style={styles.featureText}>Systematic intelligence from conversations</Text>
-          </View>
-          <View style={styles.featureItem}>
-            <Text style={styles.featureTitle}>🔍 Startup Intel</Text>
-            <Text style={styles.featureText}>Complete profiles on command</Text>
-          </View>
-        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -516,83 +330,101 @@ const VentureLabDashboard = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#1a1a2e',
   },
-  header: {
-    backgroundColor: '#4F46E5',
+  modernHeader: {
+    backgroundColor: '#1a1a2e',
     paddingHorizontal: 20,
     paddingVertical: 16,
-  },
-  headerContent: {
-    marginBottom: 16,
-  },
-  headerTitle: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: '700',
-  },
-  headerSubtitle: {
-    color: '#C7D2FE',
-    fontSize: 12,
-    marginTop: 2,
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 8,
-    padding: 4,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    alignItems: 'center',
-  },
-  activeTab: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-  },
-  tabText: {
-    color: '#C7D2FE',
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  activeTabText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-  chatSection: {
-    flex: 1,
-    margin: 16,
-    backgroundColor: '#fff',
-    borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 3,
+    elevation: 4,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  logoContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  logoIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: 'blue',
+    borderColor: 'red',
+    marginRight: 12,
+    shadowColor: '#3b82f6',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  headerTitle: {
+    color: '#ffffff',
+    fontSize: 20,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+  },
+  statusIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  onlineIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#10b981',
+    marginRight: 6,
+  },
+  statusText: {
+    color: '#94a3b8',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  chatSection: {
+    flex: 1,
+    margin: 35,
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 8,
+    overflow: 'hidden',
   },
   chatHeader: {
-    padding: 16,
+    padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: '#e2e8f0',
+    backgroundColor: '#ffffff',
   },
   chatTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
     color: '#1e293b',
+    marginBottom: 4,
+    letterSpacing: 0.3,
   },
   chatSubtitle: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#64748b',
-    marginTop: 2,
+    fontWeight: '400',
   },
   chatMessages: {
     flex: 1,
-    padding: 16,
+    backgroundColor: '#f8fafc',
+  },
+  chatMessagesContent: {
+    padding: 20,
+    paddingBottom: 10,
   },
   messageContainer: {
-    marginBottom: 12,
+    marginBottom: 16,
   },
   botMessageContainer: {
     alignItems: 'flex-start',
@@ -602,359 +434,142 @@ const styles = StyleSheet.create({
   },
   messageBubble: {
     maxWidth: '85%',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   botMessage: {
     backgroundColor: '#f1f5f9',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: 'red',
+    borderTopLeftRadius: 4,
   },
   userMessage: {
-    backgroundColor: '#4F46E5',
+    backgroundColor: '#3b82f6',
+    borderTopRightRadius: 4,
   },
   messageText: {
-    fontSize: 13,
-    lineHeight: 18,
+    fontSize: 15,
+    lineHeight: 22,
+    fontWeight: '400',
   },
   botMessageText: {
-    color: '#1e293b',
+    color: '#334155',
   },
   userMessageText: {
-    color: '#fff',
+    color: '#ffffff',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    padding: 20,
     borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
+    borderTopColor: '#e2e8f0',
+    backgroundColor: 'gray',
   },
   textInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginRight: 8,
-    backgroundColor: '#fff',
-    fontSize: 14,
+    borderColor: '#d1d5db',
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginRight: 12,
+    backgroundColor: '#f9fafb',
+    fontSize: 15,
+    color: '#1f2937',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   voiceButton: {
-    backgroundColor: '#10B981',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 20,
+    backgroundColor: 'blue',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 24,
     marginRight: 8,
+    shadowColor: '#8b5cf6',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   voiceButtonRecording: {
-    backgroundColor: '#EF4444',
+    backgroundColor: '#ef4444',
   },
   voiceButtonText: {
     fontSize: 16,
   },
   sendButton: {
-    backgroundColor: '#4F46E5',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
+    backgroundColor: 'blue',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 24,
+    shadowColor: '#3b82f6',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   sendButtonText: {
-    color: '#fff',
+    color: '#ffffff',
     fontWeight: '600',
-    fontSize: 14,
+    fontSize: 15,
+    letterSpacing: 0.3,
   },
-  startupSection: {
+  bottomTabs: {
+    flexDirection: 'row',
+    backgroundColor: '#ffffff',
+    borderTopWidth: 1,
+    borderTopColor: '#e2e8f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  bottomTab: {
     flex: 1,
-    margin: 16,
-  },
-  startupSelector: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 24,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    position: 'relative',
   },
-  selectorTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1e293b',
-    marginBottom: 8,
-  },
-  selectorSubtitle: {
-    fontSize: 14,
-    color: '#64748b',
-    textAlign: 'center',
-    marginBottom: 24,
-    lineHeight: 20,
-  },
-  startupButtons: {
-    width: '100%',
-  },
-  startupButton: {
+  activeBottomTab: {
     backgroundColor: '#f8fafc',
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
   },
-  startupButtonTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1e293b',
+  tabContent: {
+    alignItems: 'center',
   },
-  startupButtonSubtitle: {
-    fontSize: 12,
-    color: '#64748b',
-    marginTop: 4,
-  },
-  startupProfile: {
-    flex: 1,
-  },
-  startupHeader: {
-    backgroundColor: '#fff',
-    padding: 20,
-    marginBottom: 12,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  startupHeaderContent: {
-    marginBottom: 12,
-  },
-  startupName: {
+  tabIcon: {
     fontSize: 20,
-    fontWeight: '700',
-    color: '#1e293b',
-    marginBottom: 8,
-  },
-  startupBadges: {
-    flexDirection: 'row',
-    marginBottom: 8,
-  },
-  stageBadge: {
-    backgroundColor: '#dbeafe',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginRight: 8,
-  },
-  stageBadgeText: {
-    color: '#1d4ed8',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  sectorBadge: {
-    backgroundColor: '#dcfce7',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  sectorBadgeText: {
-    color: '#166534',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  startupValuation: {
-    fontSize: 14,
-    color: '#64748b',
-  },
-  backButton: {
-    alignSelf: 'flex-start',
-    backgroundColor: '#f1f5f9',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  backButtonText: {
-    color: '#4F46E5',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  metricsSection: {
-    backgroundColor: '#fff',
-    padding: 16,
-    marginBottom: 12,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1e293b',
-    marginBottom: 12,
-  },
-  metricsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  metricCard: {
-    backgroundColor: '#f8fafc',
-    padding: 12,
-    borderRadius: 8,
-    width: '48%',
-    marginBottom: 8,
-  },
-  metricLabel: {
-    fontSize: 12,
-    color: '#64748b',
-    marginBottom: 4
-  },
-  metricValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1e293b',
-  },
-  growthValue: {
-    color: '#10B981',
-  },
-  meetingSection: {
-    backgroundColor: '#fff',
-    padding: 16,
-    marginBottom: 12,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  meetingCard: {
-    backgroundColor: '#f8fafc',
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  meetingHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  meetingDate: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1e293b',
-  },
-  meetingDuration: {
-    fontSize: 12,
-    color: '#64748b',
-    backgroundColor: '#fff',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  meetingAttendees: {
-    fontSize: 12,
-    color: '#64748b',
-    marginBottom: 16,
-  },
-  subsectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1e293b',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  keyPoint: {
-    fontSize: 13,
-    color: '#374151',
-    lineHeight: 18,
     marginBottom: 4,
   },
-  actionItem: {
-    backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  actionItemHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 4,
-  },
-  actionItemText: {
-    fontSize: 13,
-    fontWeight: '500',
-    color: '#1e293b',
-    flex: 1,
-    marginRight: 8,
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginTop: 4,
-  },
-  completedDot: {
-    backgroundColor: '#10B981',
-  },
-  pendingDot: {
-    backgroundColor: '#F59E0B',
-  },
-  actionItemDetails: {
-    fontSize: 11,
+  bottomTabText: {
     color: '#64748b',
-  },
-  nextStepsSection: {
-    marginTop: 8,
-  },
-  nextStepsText: {
-    fontSize: 13,
-    color: '#374151',
-    lineHeight: 18,
-    fontStyle: 'italic',
-  },
-  foundersSection: {
-    backgroundColor: '#fff',
-    padding: 16,
-    marginBottom: 12,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  foundersCard: {
-    backgroundColor: '#f8fafc',
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  founderName: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#1e293b',
-    marginBottom: 4,
-  },
-  foundedYear: {
     fontSize: 12,
-    color: '#64748b',
-    marginTop: 8,
-    fontStyle: 'italic',
+    fontWeight: '500',
+    letterSpacing: 0.3,
+  },
+  activeBottomTabText: {
+    color: '#3b82f6',
+    fontWeight: '600',
+  },
+  activeTabIndicator: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+    backgroundColor: '#3b82f6',
+    borderRadius: 2,
   },
   modalOverlay: {
     flex: 1,
@@ -963,52 +578,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: '#fff',
-    padding: 24,
+    backgroundColor: '#ffffff',
+    padding: 32,
     borderRadius: 16,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 16,
+    elevation: 12,
+    minWidth: 280,
   },
   processingText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1e293b',
+    color: '#1f2937',
     marginTop: 16,
     textAlign: 'center',
+    letterSpacing: 0.3,
   },
   processingSubtext: {
-    fontSize: 12,
-    color: '#64748b',
+    fontSize: 14,
+    color: '#6b7280',
     marginTop: 4,
     textAlign: 'center',
   },
-  featuresFooter: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#e2e8f0',
-  },
-  featureItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  featureTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#1e293b',
-  },
-  featureText: {
-    fontSize: 10,
-    color: '#64748b',
-    textAlign: 'center',
-    marginTop: 2,
-  },
 });
-
 export default VentureLabDashboard;

@@ -89,7 +89,7 @@ function App() {
     );
   }
 
-  function RestrainedTabs() {
+  function DemoTabs() {
     return (
       <Tab.Navigator screenOptions={({ route }) => ({
         tabBarStyle:  {
@@ -98,8 +98,8 @@ function App() {
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
   
-          if (route.name === 'MyMachines') {
-            iconName = focused ? 'build' : 'build';
+          if (route.name === 'VenturBot') {
+            iconName = focused ? 'rocket' : 'rocket';
           } else if (route.name === 'Notifications') {
             iconName = focused ? 'notifications-outline' : 'notifications-outline';
           } else if (route.name === 'Inventory') {
@@ -111,9 +111,9 @@ function App() {
         tabBarActiveTintColor: 'white',
         tabBarInactiveTintColor: 'black',
       })}>
-        <Tab.Screen name="MyMachines" component={MyMachinesScreen} initialParams={{spoofLoggedIn: false, spoofFormateur: false, spoofAdmin: false, spoofValidated: true}}/>
-        {/* <Tab.Screen name="Notifications" component={NotifsScreen} initialParams={{"gameFileContext": gameFileContext}}/> */}
-        <Tab.Screen name="Inventory" component={InventoryScreen} initialParams={{"gameFileContext": gameFileContext}}/>
+        <Tab.Screen name="VenturBot" component={MyMachinesScreen} initialParams={{spoofLoggedIn: false, spoofFormateur: false, spoofAdmin: false, spoofValidated: true}}/>
+        <Tab.Screen name="Notifications" component={NotifsScreen} initialParams={{"gameFileContext": gameFileContext}}/>
+        {/* <Tab.Screen name="Inventory" component={InventoryScreen} initialParams={{"gameFileContext": gameFileContext}}/> */}
       </Tab.Navigator>
     );
   }
@@ -123,17 +123,19 @@ function App() {
   return (
     <NavigationContainer independent={true}>
       <Stack.Navigator>
+        <Stack.Screen name="DemoTabs"            component={DemoTabs} options={{ headerShown: false }}  />
 
         <Stack.Screen name="Login"          component={LoginScreen} options={{headerShown: false}} initialParams={{"gameFileContext": gameFileContext}}  />
         <Stack.Screen name="Signup"         component={SignupScreen} />
         <Stack.Screen name="PasswordReset"  component={PasswordResetScreen} />
         {/* <Stack.Screen name="OrganizationsPartenaires" component={OrganizationsPartenairesScreen} /> */}
 
+        <Stack.Screen name="MyMachines"  component={MyMachinesScreen} options={{ headerShown: true, headerBackTitleVisible: true }}/>
 
         
         <Stack.Screen name="AjoutMachine"       component={AjoutMachineScreen} />
         <Stack.Screen name="Machine"       component={MachineScreen} />
-        <Stack.Screen name="MyMachines"  component={MyMachinesScreen} options={{ headerShown: true, headerBackTitleVisible: true }}/>
+        
         {/* <Stack.Screen name="InscriptionMachine" component={InscriptionMachineScreen} /> */}
 
         {/* tabs if ADMIN */}
@@ -151,7 +153,6 @@ function App() {
         {/* <Stack.Screen name="FormateurTabs" component={FormateurTabs} options={{ headerShown: false }}  /> */}
         
         {/* Restrained Functionality */}
-        <Stack.Screen name="RestrainedTabs"            component={RestrainedTabs} options={{ headerShown: false }}  />
 
         <Stack.Screen name="UnderConstruction" component={UnderConstructionScreen} />
       </Stack.Navigator>
